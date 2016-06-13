@@ -1,6 +1,6 @@
 # go-soletta #
 
-Provides the go bindings for [Soletta library][]
+Provides the go bindings for [Soletta library][1].
 
 ## Usage ##
 
@@ -8,12 +8,14 @@ Provides the go bindings for [Soletta library][]
 import "github.com/kaspersky/go-soletta/soletta"
 ```
 
-Construct a new Soletta object, then start and stop the soletta engine:
+A minimal example:
 
 ```go
-s := soletta.NewSoletta()
-ok := s.Start()
-ok = s.Stop()
+ok := soletta.Init()
+if ok {
+    soletta.Run()
+    soletta.Shutdown()
+}
 ```
 
-[Soletta library]: https://github.com/solettaproject/soletta
+[1]: https://github.com/solettaproject/soletta
