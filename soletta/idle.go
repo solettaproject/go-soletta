@@ -1,8 +1,6 @@
 package soletta
 
 /*
-#cgo CFLAGS: -I/usr/include/soletta/
-#cgo LDFLAGS: -lsoletta
 #include "soletta.h"
 
 extern bool goIdle(void *data);
