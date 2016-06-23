@@ -1,8 +1,8 @@
 package soletta
 
 /*
-#cgo CFLAGS: -I/usr/include/soletta/
-#cgo LDFLAGS: -lsoletta
+#cgo pkg-config: soletta
+
 #include "soletta.h"
 */
 import "C"
