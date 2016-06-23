@@ -15,10 +15,10 @@ struct mainloop_source_info
     void *data;
 };
 
-static struct mainloop_source_info *source_bridge(void *data)
+static struct mainloop_source_info *source_bridge(void *data, uint16_t mainloop_source_api_version)
 {
     struct sol_mainloop_source_type *source = malloc(sizeof *source);
-    source->api_version = SOL_MAINLOOP_SOURCE_TYPE_API_VERSION;
+    source->api_version = mainloop_source_api_version;
     source->check = goCheck;
     source->dispatch = goDispatch;
     source->dispose = goDispose;
@@ -37,6 +37,7 @@ import "C"
 import "unsafe"
 
 type MainloopSource interface {
+	GetMainloopSourceAPIVersion() uint16
 	Check(interface{}) bool
 	Dispatch(interface{})
 	Dispose(interface{})
@@ -44,7 +45,7 @@ type MainloopSource interface {
 }
 
 func AddSource(source MainloopSource, data interface{}) interface{} {
-	ret := C.source_bridge(unsafe.Pointer(&sourcePacked{source, data}))
+	ret := C.source_bridge(unsafe.Pointer(&sourcePacked{source, data}), C.uint16_t(source.GetMainloopSourceAPIVersion()))
 	gMainloopSources[ret.handle] = ret
 	return ret.handle
 }

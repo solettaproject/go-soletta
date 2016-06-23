@@ -7,6 +7,8 @@ package soletta
 */
 import "C"
 
+var MainloopSourceAPIVersion uint16 = C.SOL_MAINLOOP_SOURCE_TYPE_API_VERSION
+
 func Init() bool {
 	r := C.sol_init()
 	if r == 0 {
