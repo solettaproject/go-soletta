@@ -2,10 +2,17 @@
 
 Provides the go bindings for [Soletta library][1].
 
+
+## Deployment ##
+
+```
+go get github.com/solettaproject/go-soletta/soletta
+```
+
 ## Usage ##
 
 ```go
-import "github.com/kaspersky/go-soletta/soletta"
+import "github.com/solettaproject/go-soletta/soletta"
 ```
 
 A minimal example:
