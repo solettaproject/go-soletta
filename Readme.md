@@ -2,6 +2,7 @@
 
 Provides the go bindings for [Soletta library][1].
 
+**Documentation:** [![GoDoc](https://godoc.org/github.com/solettaproject/go-soletta/soletta?status.svg)](https://godoc.org/github.com/solettaproject/go-soletta/soletta)
 
 ## Deployment ##
 
