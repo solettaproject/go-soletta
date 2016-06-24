@@ -13,12 +13,17 @@ static struct sol_timeout *timeout_bridge(void *data, int ms)
 import "C"
 import "unsafe"
 
-type TimeoutCallback func(data interface{}) bool
+//Describes a timeout callback to be registered with AddTimeout.
+type TimeoutCallback func(context interface{}) bool
 
-func AddTimeout(cb TimeoutCallback, data interface{}, timeout int) interface{} {
-	return C.timeout_bridge(unsafe.Pointer(&timeoutPacked{cb, data}), C.int(timeout))
+//Adds a function to be called every timeout milliseconds by the main loop,
+//as long as cb returns true. Returns a handler which can be used to delete
+//the timeout callback at a later point.
+func AddTimeout(cb TimeoutCallback, context interface{}, timeout int) interface{} {
+	return C.timeout_bridge(unsafe.Pointer(&timeoutPacked{cb, context}), C.int(timeout))
 }
 
+//Deletes a previously registered timeout, based on its handle.
 func RemoveTimeout(handle interface{}) {
 	C.sol_timeout_del(handle.(*C.struct_sol_timeout))
 }

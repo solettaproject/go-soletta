@@ -36,6 +36,24 @@ static struct mainloop_source_info *source_bridge(void *data, uint16_t mainloop_
 import "C"
 import "unsafe"
 
+/*
+Interface which represents a mainloop event source.
+
+    GetMainloopSourceAPIVersion
+Provides the API version.
+
+    Check
+Function to be called to check if there are events to be dispatched.
+
+    Dispatch
+Function to be called during main loop iterations if prepare or check returns true.
+
+    Dispose
+Function to be called when the source is deleted.
+
+    Prepare
+Function to be called to query the next timeout for the next event in this source.
+*/
 type MainloopSource interface {
 	GetMainloopSourceAPIVersion() uint16
 	Check(interface{}) bool
@@ -44,12 +62,14 @@ type MainloopSource interface {
 	Prepare(interface{}) bool
 }
 
+//Creates a new source of events to the main loop.
 func AddSource(source MainloopSource, data interface{}) interface{} {
 	ret := C.source_bridge(unsafe.Pointer(&sourcePacked{source, data}), C.uint16_t(source.GetMainloopSourceAPIVersion()))
 	gMainloopSources[ret.handle] = ret
 	return ret.handle
 }
 
+//Destroy a source of main loop events.
 func RemoveSource(handle interface{}) {
 	h, ok := gMainloopSources[handle.(*C.struct_sol_mainloop_source)]
 	if !ok {
@@ -61,6 +81,7 @@ func RemoveSource(handle interface{}) {
 	delete(gMainloopSources, handle.(*C.struct_sol_mainloop_source))
 }
 
+//Retrieve the user data (context) given to the source at creation time.
 func GetSourceData(handle interface{}) interface{} {
 	return (*sourcePacked)(gMainloopSources[handle.(*C.struct_sol_mainloop_source)].data).data
 }
