@@ -16,16 +16,21 @@ import "unsafe"
 //Describes a timeout callback to be registered with AddTimeout.
 type TimeoutCallback func(context interface{}) bool
 
+//Represents an opaque timeout handle
+type TimeoutHandle struct {
+	handle *C.struct_sol_timeout
+}
+
 //Adds a function to be called every timeout milliseconds by the main loop,
 //as long as cb returns true. Returns a handler which can be used to delete
 //the timeout callback at a later point.
-func AddTimeout(cb TimeoutCallback, context interface{}, timeout int) interface{} {
-	return C.timeout_bridge(unsafe.Pointer(&timeoutPacked{cb, context}), C.int(timeout))
+func AddTimeout(cb TimeoutCallback, context interface{}, timeout int) TimeoutHandle {
+	return TimeoutHandle{C.timeout_bridge(unsafe.Pointer(&timeoutPacked{cb, context}), C.int(timeout))}
 }
 
 //Deletes a previously registered timeout, based on its handle.
-func RemoveTimeout(handle interface{}) {
-	C.sol_timeout_del(handle.(*C.struct_sol_timeout))
+func RemoveTimeout(handle TimeoutHandle) {
+	C.sol_timeout_del(handle.handle)
 }
 
 type timeoutPacked struct {

@@ -16,18 +16,23 @@ import "unsafe"
 //Describes an idle callback to be registered with AddIdle.
 type IdleCallback func(context interface{}) bool
 
+//Represents an opaque idler handle
+type IdleHandle struct {
+	handle *C.struct_sol_idle
+}
+
 //Adds a function to be called when the application goes idle.
 //cb is called with the context argument when the main loop reaches the idle state.
 //A return value of false will get the idler removed.
 //Returns a handler which can be used to delete the idler at a later point.
-func AddIdle(cb IdleCallback, context interface{}) interface{} {
+func AddIdle(cb IdleCallback, context interface{}) IdleHandle {
 	p := unsafe.Pointer(&idlePacked{cb, context})
-	return C.idle_bridge(p)
+	return IdleHandle{C.idle_bridge(p)}
 }
 
 //Deletes a previously registered idler, based on its handle.
-func RemoveIdle(handle interface{}) {
-	C.sol_idle_del(handle.(*C.struct_sol_idle))
+func RemoveIdle(handle IdleHandle) {
+	C.sol_idle_del(handle.handle)
 }
 
 type idlePacked struct {
