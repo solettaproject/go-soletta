@@ -12,7 +12,6 @@ struct mainloop_source_info
 {
     struct sol_mainloop_source *handle;
     struct sol_mainloop_source_type *source;
-    void *data;
 };
 
 static struct mainloop_source_info *source_bridge(void *data, uint16_t mainloop_source_api_version)
@@ -28,7 +27,6 @@ static struct mainloop_source_info *source_bridge(void *data, uint16_t mainloop_
     struct mainloop_source_info *msi = malloc(sizeof *msi);
     msi->handle = sol_mainloop_add_source(source, data);
     msi->source = source;
-    msi->data = data;
 
     return msi;
 }
@@ -62,31 +60,32 @@ type MainloopSource interface {
 	Prepare(interface{}) bool
 }
 
+//Represents an opaque source handle
+type MainloopSourceHandle struct {
+	msi  *C.struct_mainloop_source_info
+	pack uintptr
+}
+
 //Creates a new source of events to the main loop.
-func AddSource(source MainloopSource, data interface{}) interface{} {
-	ret := C.source_bridge(unsafe.Pointer(&sourcePacked{source, data}), C.uint16_t(source.GetMainloopSourceAPIVersion()))
-	gMainloopSources[ret.handle] = ret
-	return ret.handle
+func AddSource(source MainloopSource, data interface{}) MainloopSourceHandle {
+	p := mapPointer(&sourcePacked{source, data})
+	msi := C.source_bridge(unsafe.Pointer(p), C.uint16_t(source.GetMainloopSourceAPIVersion()))
+	handle := MainloopSourceHandle{msi, p}
+	return handle
 }
 
 //Destroy a source of main loop events.
-func RemoveSource(handle interface{}) {
-	h, ok := gMainloopSources[handle.(*C.struct_sol_mainloop_source)]
-	if !ok {
-		return
-	}
-	C.sol_mainloop_del_source(handle.(*C.struct_sol_mainloop_source))
-	C.free(unsafe.Pointer(h.source))
-	C.free(unsafe.Pointer(h))
-	delete(gMainloopSources, handle.(*C.struct_sol_mainloop_source))
+func RemoveSource(handle MainloopSourceHandle) {
+	C.sol_mainloop_del_source(handle.msi.handle)
+	C.free(unsafe.Pointer(handle.msi.source))
+	C.free(unsafe.Pointer(handle.msi))
 }
 
 //Retrieve the user data (context) given to the source at creation time.
-func GetSourceData(handle interface{}) interface{} {
-	return (*sourcePacked)(gMainloopSources[handle.(*C.struct_sol_mainloop_source)].data).data
+func GetSourceData(handle MainloopSourceHandle) interface{} {
+	p := getPointerMapping(handle.pack).(*sourcePacked)
+	return p.data
 }
-
-var gMainloopSources map[*C.struct_sol_mainloop_source](*C.struct_mainloop_source_info) = make(map[*C.struct_sol_mainloop_source](*C.struct_mainloop_source_info))
 
 type sourcePacked struct {
 	source MainloopSource
@@ -95,24 +94,25 @@ type sourcePacked struct {
 
 //export goCheck
 func goCheck(data unsafe.Pointer) C.bool {
-	p := (*sourcePacked)(data)
+	p := getPointerMapping(uintptr(data)).(*sourcePacked)
 	return C.bool(p.source.Check(p.data))
 }
 
 //export goDispatch
 func goDispatch(data unsafe.Pointer) {
-	p := (*sourcePacked)(data)
+	p := getPointerMapping(uintptr(data)).(*sourcePacked)
 	p.source.Dispatch(p.data)
 }
 
 //export goDispose
 func goDispose(data unsafe.Pointer) {
-	p := (*sourcePacked)(data)
+	p := getPointerMapping(uintptr(data)).(*sourcePacked)
 	p.source.Dispose(p.data)
+	removePointerMapping(uintptr(data))
 }
 
 //export goPrepare
 func goPrepare(data unsafe.Pointer) C.bool {
-	p := (*sourcePacked)(data)
+	p := getPointerMapping(uintptr(data)).(*sourcePacked)
 	return C.bool(p.source.Prepare(p.data))
 }
