@@ -4,6 +4,14 @@
 
 Provides the go bindings for [Soletta™ Project library][1].
 
+**Documentation:** [![GoDoc](https://godoc.org/github.com/solettaproject/go-soletta/soletta?status.svg)](https://godoc.org/github.com/solettaproject/go-soletta/soletta)
+
+## Deployment ##
+
+```
+go get github.com/solettaproject/go-soletta/soletta
+```
+
 ## Usage ##
 
 ```go
