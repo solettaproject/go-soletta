@@ -1,11 +1,13 @@
 # go-soletta #
 
-Provides the go bindings for [Soletta library][1].
+[![Build Status](https://semaphoreci.com/api/v1/solettaproject/go-soletta/branches/master/shields_badge.svg)](https://semaphoreci.com/solettaproject/go-soletta)<br/>
+
+Provides the go bindings for [Soletta™ Project library][1].
 
 ## Usage ##
 
 ```go
-import "github.com/kaspersky/go-soletta/soletta"
+import "github.com/solettaproject/go-soletta/soletta"
 ```
 
 A minimal example:
