@@ -19,6 +19,7 @@ type IdleCallback func(context interface{}) bool
 //Represents an opaque idler handle
 type IdleHandle struct {
 	handle *C.struct_sol_idle
+	pack   uintptr
 }
 
 //Adds a function to be called when the application goes idle.
@@ -26,12 +27,13 @@ type IdleHandle struct {
 //A return value of false will get the idler removed.
 //Returns a handler which can be used to delete the idler at a later point.
 func AddIdle(cb IdleCallback, context interface{}) IdleHandle {
-	p := unsafe.Pointer(&idlePacked{cb, context})
-	return IdleHandle{C.idle_bridge(p)}
+	p := mapPointer(&idlePacked{cb, context})
+	return IdleHandle{C.idle_bridge(unsafe.Pointer(p)), p}
 }
 
 //Deletes a previously registered idler, based on its handle.
 func RemoveIdle(handle IdleHandle) {
+	removePointerMapping(handle.pack)
 	C.sol_idle_del(handle.handle)
 }
 
@@ -42,6 +44,6 @@ type idlePacked struct {
 
 //export goIdle
 func goIdle(data unsafe.Pointer) C.bool {
-	p := (*idlePacked)(data)
+	p := getPointerMapping(uintptr(data)).(*idlePacked)
 	return C.bool(p.cb(p.data))
 }

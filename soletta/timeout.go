@@ -19,17 +19,20 @@ type TimeoutCallback func(context interface{}) bool
 //Represents an opaque timeout handle
 type TimeoutHandle struct {
 	handle *C.struct_sol_timeout
+	pack   uintptr
 }
 
 //Adds a function to be called every timeout milliseconds by the main loop,
 //as long as cb returns true. Returns a handler which can be used to delete
 //the timeout callback at a later point.
 func AddTimeout(cb TimeoutCallback, context interface{}, timeout int) TimeoutHandle {
-	return TimeoutHandle{C.timeout_bridge(unsafe.Pointer(&timeoutPacked{cb, context}), C.int(timeout))}
+	p := mapPointer(&timeoutPacked{cb, context})
+	return TimeoutHandle{C.timeout_bridge(unsafe.Pointer(p), C.int(timeout)), p}
 }
 
 //Deletes a previously registered timeout, based on its handle.
 func RemoveTimeout(handle TimeoutHandle) {
+	removePointerMapping(handle.pack)
 	C.sol_timeout_del(handle.handle)
 }
 
@@ -40,6 +43,6 @@ type timeoutPacked struct {
 
 //export goTimeout
 func goTimeout(data unsafe.Pointer) C.bool {
-	p := (*timeoutPacked)(data)
+	p := getPointerMapping(uintptr(data)).(*timeoutPacked)
 	return C.bool(p.cb(p.data))
 }
