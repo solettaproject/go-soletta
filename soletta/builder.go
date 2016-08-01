@@ -25,28 +25,15 @@ func NewFlowBuilder() FlowBuilder {
 //Adds a new flow node named nodeName of type nodeType.
 //A set of options of form (key, value) can be provided.
 func (fb *FlowBuilder) AddNode(nodeName, nodeType string, options map[string]string) {
-	cname, cnodeType := C.CString(name), C.CString(nodeType)
+	cname, cnodeType := C.CString(nodeName), C.CString(nodeType)
 	defer C.free(unsafe.Pointer(cname))
 	defer C.free(unsafe.Pointer(cnodeType))
 
 	/* Create the node options */
-	var coptions unsafe.Pointer
+	strvOptions := newstrvOptions(options)
+	defer strvOptions.destroy()
 
-	if len(options) > 0 {
-		step := unsafe.Sizeof((*C.char)(nil))
-		coptions = C.malloc(C.size_t(uintptr(len(options)+1) * step))
-		defer C.free(coptions)
-		pindex := uintptr(coptions)
-		for key, value := range options {
-			coption := C.CString(key + "=" + value)
-			defer C.free(unsafe.Pointer(coption))
-			*(**C.char)(unsafe.Pointer(pindex)) = coption
-			pindex += step
-		}
-		*(**C.char)(unsafe.Pointer(pindex)) = nil
-	}
-
-	C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, coptions)
+	C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, strvOptions.cstrvOptions)
 }
 
 //Add a connection via port names to the connections specification

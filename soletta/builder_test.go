@@ -12,8 +12,10 @@ func Example() {
 	defer t.Destroy()
 
 	flow := t.CreateNode(nil, "highlevel", FlowOptions{})
-	defer flow.Destroy()
 
 	Run()
+
+	flow.Destroy()
+
 	Shutdown()
 }
