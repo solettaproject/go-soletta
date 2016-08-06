@@ -28,11 +28,6 @@ type FlowOptions struct {
 type FlowPort struct {
 }
 
-//Represents data packets exchanged between flow nodes
-type FlowPacket struct {
-	cpacket *C.struct_sol_flow_packet
-}
-
 //Frees the resources associated with the flow node
 func (fn *FlowNode) Destroy() {
 	C.sol_flow_node_del(fn.node)
@@ -99,24 +94,4 @@ func (fnt *FlowNodeType) GetOutputPort(name string) uint16 {
 //Frees the resources associated with the flow node type.
 func (fnt *FlowNodeType) Destroy() {
 	C.sol_flow_node_type_del(fnt.nodeType)
-}
-
-//Returns the integer value stored in the packet
-func (fp *FlowPacket) GetInteger() (ret int32, ok bool) {
-	var value C.int32_t
-	r := C.sol_flow_packet_get_irange_value(fp.cpacket, &value)
-	if r < 0 {
-		return 0, false
-	}
-	return int32(value), true
-}
-
-//Returns the boolean value stored in the packet
-func (fp *FlowPacket) GetBool() (ret, ok bool) {
-	var value C.bool
-	r := C.sol_flow_packet_get_bool(fp.cpacket, &value)
-	if r < 0 {
-		return false, false
-	}
-	return bool(value), true
 }
