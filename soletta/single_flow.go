@@ -15,17 +15,10 @@ static struct sol_flow_node *single_flow_bridge(const char *id, const struct sol
 import "C"
 import "unsafe"
 
-//Represents a flow created from a single node
-type SingleFlow struct {
-	flowNode *C.struct_sol_flow_node
-}
-
 //Creates a flow from a single node
 //This is useful for scenaries when usage of a single node is desired,
 //manually feeding and processing packets on the node's ports.
-func NewSingleFlow(nodeName string, nodeType FlowNodeType, inputPorts, outputPorts []uint16, options map[string]string, cb SingleFlowProcessCallback, data interface{}) *SingleFlow {
-	ret := &SingleFlow{}
-
+func NewSingleFlow(nodeName string, nodeType FlowNodeType, inputPorts, outputPorts []uint16, options map[string]string, cb SingleFlowProcessCallback, data interface{}) *FlowNode {
 	cname := C.CString(nodeName)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -58,9 +51,9 @@ func NewSingleFlow(nodeName string, nodeType FlowNodeType, inputPorts, outputPor
 	*(*C.uint16_t)(unsafe.Pointer(pindexOut)) = C.UINT16_MAX
 
 	p := mapPointer(&singleFlowPacked{cb, data})
-	ret.flowNode = C.single_flow_bridge(cname, nodeType.nodeType, coptions, (*C.uint16_t)(cinputPorts), (*C.uint16_t)(coutputPorts), unsafe.Pointer(p))
+	flowNode := C.single_flow_bridge(cname, nodeType.nodeType, coptions, (*C.uint16_t)(cinputPorts), (*C.uint16_t)(coutputPorts), unsafe.Pointer(p))
 
-	return ret
+	return &FlowNode{flowNode}
 }
 
 //Callback triggered whenever there is data on node's ports
