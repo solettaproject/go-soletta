@@ -1,6 +1,6 @@
 package soletta
 
-func Example() {
+func Example_flowBuilder() {
 	Init()
 
 	b := NewFlowBuilder()
@@ -11,7 +11,7 @@ func Example() {
 	t := b.GetNodeType()
 	defer t.Destroy()
 
-	flow := t.CreateNode(nil, "highlevel", FlowOptions{})
+	flow := t.CreateNode(nil, "highlevel", nil)
 
 	Run()
 

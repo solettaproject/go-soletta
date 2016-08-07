@@ -22,10 +22,6 @@ type FlowNodeType struct {
 	nodeType *C.struct_sol_flow_node_type
 }
 
-//Represents a collection of options for flow configuration
-type FlowOptions struct {
-}
-
 //Represents a port used in flow node connections
 type FlowPort struct {
 }
@@ -103,14 +99,16 @@ func (fnt *FlowNodeType) CreateNode(parent *FlowNode, id string, options map[str
 		cpnode = parent.cnode
 	}
 
-	strvOptions := newstrvOptions(options)
-	defer strvOptions.destroy()
-	namedOptions := C.struct_sol_flow_node_named_options{}
-	C.sol_flow_node_named_options_init_from_strv(&namedOptions, fnt.nodeType, strvOptions.cstrvOptions)
-	defer C.sol_flow_node_named_options_fini(&namedOptions)
 	var coptions *C.struct_sol_flow_node_options
-	C.sol_flow_node_options_new(fnt.nodeType, &namedOptions, &coptions)
-	defer C.sol_flow_node_options_del(fnt.nodeType, coptions)
+	strvOptions := newstrvOptions(options)
+	if strvOptions != nil {
+		defer strvOptions.destroy()
+		namedOptions := C.struct_sol_flow_node_named_options{}
+		C.sol_flow_node_named_options_init_from_strv(&namedOptions, fnt.nodeType, strvOptions.cstrvOptions)
+		defer C.sol_flow_node_named_options_fini(&namedOptions)
+		C.sol_flow_node_options_new(fnt.nodeType, &namedOptions, &coptions)
+		defer C.sol_flow_node_options_del(fnt.nodeType, coptions)
+	}
 
 	cnode := C.sol_flow_node_new(cpnode, cid, fnt.nodeType, coptions)
 	return &FlowNode{cnode: cnode}

@@ -13,7 +13,7 @@ type strvOptions struct {
 
 func newstrvOptions(options map[string]string) *strvOptions {
 	if options == nil {
-		return &strvOptions{nil, 0}
+		return nil
 	}
 	step := unsafe.Sizeof((*C.char)(nil))
 	coptions := C.malloc(C.size_t(uintptr(len(options)+1) * step))

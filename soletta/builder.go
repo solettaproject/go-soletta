@@ -15,10 +15,10 @@ type FlowBuilder struct {
 
 //Returns a newly constructed and initialized flow builder.
 //The builder will be automatically destroyed when no longer needed.
-func NewFlowBuilder() FlowBuilder {
-	builder := FlowBuilder{}
+func NewFlowBuilder() *FlowBuilder {
+	builder := &FlowBuilder{}
 	builder.init()
-	runtime.SetFinalizer(&builder, func(fb *FlowBuilder) { fb.destroy() })
+	runtime.SetFinalizer(builder, func(fb *FlowBuilder) { fb.destroy() })
 	return builder
 }
 
@@ -30,10 +30,14 @@ func (fb *FlowBuilder) AddNode(nodeName, nodeType string, options map[string]str
 	defer C.free(unsafe.Pointer(cnodeType))
 
 	/* Create the node options */
+	var coptions **C.char
 	strvOptions := newstrvOptions(options)
-	defer strvOptions.destroy()
+	if strvOptions != nil {
+		defer strvOptions.destroy()
+		coptions = strvOptions.cstrvOptions
+	}
 
-	C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, strvOptions.cstrvOptions)
+	C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, coptions)
 }
 
 //Add a connection via port names to the connections specification

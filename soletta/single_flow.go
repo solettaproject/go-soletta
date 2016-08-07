@@ -22,15 +22,18 @@ func NewSingleFlow(nodeName string, nodeType FlowNodeType, inputPorts, outputPor
 	cname := C.CString(nodeName)
 	defer C.free(unsafe.Pointer(cname))
 
-	strvOptions := newstrvOptions(options)
-	defer strvOptions.destroy()
-
-	namedOptions := C.struct_sol_flow_node_named_options{}
-	C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.nodeType, strvOptions.cstrvOptions)
-	defer C.sol_flow_node_named_options_fini(&namedOptions)
 	var coptions *C.struct_sol_flow_node_options
-	C.sol_flow_node_options_new(nodeType.nodeType, &namedOptions, &coptions)
-	defer C.sol_flow_node_options_del(nodeType.nodeType, coptions)
+
+	strvOptions := newstrvOptions(options)
+	if strvOptions != nil {
+		defer strvOptions.destroy()
+
+		namedOptions := C.struct_sol_flow_node_named_options{}
+		C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.nodeType, strvOptions.cstrvOptions)
+		defer C.sol_flow_node_named_options_fini(&namedOptions)
+		C.sol_flow_node_options_new(nodeType.nodeType, &namedOptions, &coptions)
+		defer C.sol_flow_node_options_del(nodeType.nodeType, coptions)
+	}
 
 	/* Create C array parameters for input and output ports */
 	step := unsafe.Sizeof((C.uint16_t)(0))
