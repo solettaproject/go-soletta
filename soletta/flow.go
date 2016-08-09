@@ -26,6 +26,18 @@ type FlowNodeType struct {
 type FlowPort struct {
 }
 
+const (
+	FlowPortInput  int = iota
+	FlowPortOutput int = iota
+)
+
+//Data structure that describes a port
+type PortDescription struct {
+	Name       string
+	PacketType string
+	PortType   int
+}
+
 //Sends a packet on this port
 func (fn *FlowNode) SendPacket(packetType string, value interface{}, port uint16) {
 	cport := C.uint16_t(port)
