@@ -3,23 +3,10 @@ package soletta
 /*
 #include <soletta.h>
 #include <sol-flow.h>
-#include <sol-flow-simple-c-type.h>
 
-struct CPortDescription
-{
-    char *name;
-    sol_flow_packet_type *packetType;
-    int portType;
-};
+#include "simple_type_c.h"
 
 extern int goProcessEvent(struct sol_flow_node *node, struct sol_flow_simple_c_type_event *ev, void *data);
-
-//TODO change function signature to allow more than 1 input port and 1 output port
-static struct sol_flow_node_type *sol_flow_simple_c_type_new_full_wrapper(const char *name, size_t context_data_size, struct CPortDescription *input_port, struct CPortDescription *output_port)
-{
-    struct sol_flow_node_type *ret = sol_flow_simple_c_type_new_full(name, context_data_size, sizeof(struct sol_flow_node_options), (void *) goProcessEvent, input_port->name, input_port->packetType, input_port->portType, output_port->name, output_port->packetType, output_port->portType, NULL);
-    return ret;
-}
 
 static int get_event_type(const struct sol_flow_simple_c_type_event *ev)
 {
@@ -83,12 +70,25 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 
 	packetTypes := map[string]*C.struct_sol_flow_packet_type{"Bool": C.SOL_FLOW_PACKET_TYPE_BOOL}
 
-	inputPort := C.struct_CPortDescription{name: C.CString(ports[0].Name), packetType: packetTypes[ports[0].PacketType], portType: C.SOL_FLOW_SIMPLE_C_TYPE_PORT_TYPE_IN}
-	defer C.free(unsafe.Pointer(inputPort.name))
-	outputPort := C.struct_CPortDescription{name: C.CString(ports[1].Name), packetType: packetTypes[ports[1].PacketType], portType: C.SOL_FLOW_SIMPLE_C_TYPE_PORT_TYPE_OUT}
-	defer C.free(unsafe.Pointer(outputPort.name))
+	/* Create the port array */
+	step := unsafe.Sizeof(C.struct_CPortDescription{})
+	cports := C.malloc(C.size_t(uintptr(len(ports)) * step))
+	defer C.free(unsafe.Pointer(cports))
+	for i, port := range ports {
+		cport := (*C.struct_CPortDescription)(unsafe.Pointer((uintptr(cports) + uintptr(i)*step)))
+		cport.name = C.CString(port.Name)
+		defer C.free(unsafe.Pointer(cport.name))
+		cport.packet_type = packetTypes[port.PacketType]
+		switch port.PortType {
+		case FlowPortInput:
+			cport.direction = C.SOL_FLOW_SIMPLE_C_TYPE_PORT_TYPE_IN
+		case FlowPortOutput:
+			cport.direction = C.SOL_FLOW_SIMPLE_C_TYPE_PORT_TYPE_OUT
+		}
+	}
 
-	ctype := C.sol_flow_simple_c_type_new_full_wrapper(cname, 0, &inputPort, &outputPort)
+	ctype := C.sol_flow_simple_c_type_new_full(cname, 0, C.uint16_t(unsafe.Sizeof(C.struct_sol_flow_node_options{})), (*[0]byte)(C.goProcessEvent), (*C.struct_CPortDescription)(cports), C.int(len(ports)))
+
 	mapTypeNameToProcessCallback[name] = cb
 	return &FlowNodeType{ctype}
 }
