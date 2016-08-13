@@ -16,7 +16,7 @@ static int get_event_type(const struct sol_flow_simple_c_type_event *ev)
 import "C"
 import "unsafe"
 
-var mapTypeNameToProcessCallback map[string]ProcessSimpleEventCallback = make(map[string]ProcessSimpleEventCallback)
+var mapTypeNameToProcessCallback map[string]simplePacked = make(map[string]simplePacked)
 
 const (
 	SimpleEventOpen                 int = iota
@@ -64,7 +64,7 @@ func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFl
 }
 
 //Creates a custom node type
-func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEventCallback) *FlowNodeType {
+func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEventCallback, data interface{}) *FlowNodeType {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -89,8 +89,14 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 
 	ctype := C.sol_flow_simple_c_type_new_full(cname, 0, C.uint16_t(unsafe.Sizeof(C.struct_sol_flow_node_options{})), (*[0]byte)(C.goProcessEvent), (*C.struct_CPortDescription)(cports), C.int(len(ports)))
 
-	mapTypeNameToProcessCallback[name] = cb
+	mapTypeNameToProcessCallback[name] = simplePacked{cb, data}
 	return &FlowNodeType{ctype}
+}
+
+//Encapsulates the callback with the associated data
+type simplePacked struct {
+	cb   ProcessSimpleEventCallback
+	data interface{}
 }
 
 //Callback for processing events associated with the node
@@ -101,9 +107,9 @@ type ProcessSimpleEventCallback func(node *FlowNode, event *SimpleFlowEvent, dat
 func goProcessEvent(cnode *C.struct_sol_flow_node, ev *C.struct_sol_flow_simple_c_type_event, data unsafe.Pointer) C.int {
 	t := C.sol_flow_node_get_type(cnode)
 	name := C.GoString(t.description.name)
-	cb := mapTypeNameToProcessCallback[name]
+	packed := mapTypeNameToProcessCallback[name]
 	ret := C.int(0)
-	r := cb(&FlowNode{cnode}, newSimpleFlowEvent(ev), nil)
+	r := packed.cb(&FlowNode{cnode}, newSimpleFlowEvent(ev), packed.data)
 
 	//Convert the callback return value to boolean
 	if !r {
