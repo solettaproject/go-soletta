@@ -35,6 +35,7 @@ type SimpleFlowEvent struct {
 	Port         uint16
 	PortName     string
 	ConnectionId uint16
+	Packet       *FlowPacket
 }
 
 func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFlowEvent {
@@ -59,6 +60,7 @@ func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFl
 	ret.PortName = C.GoString(cevent.port_name)
 	ret.Port = uint16(cevent.port)
 	ret.ConnectionId = uint16(cevent.conn_id)
+	ret.Packet = &FlowPacket{cevent.packet}
 
 	return ret
 }
@@ -68,7 +70,7 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	packetTypes := map[string]*C.struct_sol_flow_packet_type{"Bool": C.SOL_FLOW_PACKET_TYPE_BOOL}
+	packetTypes := map[string]*C.struct_sol_flow_packet_type{"Bool": C.SOL_FLOW_PACKET_TYPE_BOOL, "Integer": C.SOL_FLOW_PACKET_TYPE_IRANGE, "String": C.SOL_FLOW_PACKET_TYPE_STRING}
 
 	/* Create the port array */
 	step := unsafe.Sizeof(C.struct_CPortDescription{})
@@ -88,6 +90,9 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 	}
 
 	ctype := C.sol_flow_simple_c_type_new_full(cname, 0, C.uint16_t(unsafe.Sizeof(C.struct_sol_flow_node_options{})), (*[0]byte)(C.goProcessEvent), (*C.struct_CPortDescription)(cports), C.int(len(ports)))
+	if ctype == nil {
+		return nil
+	}
 
 	mapTypeNameToProcessCallback[name] = simplePacked{cb, data}
 	return &FlowNodeType{ctype}

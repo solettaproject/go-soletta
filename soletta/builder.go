@@ -22,9 +22,10 @@ func NewFlowBuilder() *FlowBuilder {
 	return builder
 }
 
-//Adds a new flow node named nodeName of type nodeType.
+//Adds a new flow node named nodeName of type named nodeType.
 //A set of options of form (key, value) can be provided.
-func (fb *FlowBuilder) AddNode(nodeName, nodeType string, options map[string]string) {
+//Returns true if successful, false otherwise
+func (fb *FlowBuilder) AddNodeByTypeName(nodeName, nodeType string, options map[string]string) (ok bool) {
 	cname, cnodeType := C.CString(nodeName), C.CString(nodeType)
 	defer C.free(unsafe.Pointer(cname))
 	defer C.free(unsafe.Pointer(cnodeType))
@@ -37,7 +38,27 @@ func (fb *FlowBuilder) AddNode(nodeName, nodeType string, options map[string]str
 		coptions = strvOptions.cstrvOptions
 	}
 
-	C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, coptions)
+	ok = true
+	r := C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, coptions)
+	if r < 0 {
+		ok = false
+	}
+	return
+}
+
+//Adds a new flow node named nodeName of type fnt
+//A set of options of form (key, value) can be provided.
+//Returns true if successful, false otherwise
+func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[string]string) (ok bool) {
+	cname := C.CString(nodeName)
+	defer C.free(unsafe.Pointer(cname))
+
+	ok = true
+	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.nodeType, nil)
+	if r < 0 {
+		ok = false
+	}
+	return
 }
 
 //Add a connection via port names to the connections specification
