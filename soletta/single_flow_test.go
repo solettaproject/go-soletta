@@ -16,10 +16,10 @@ func Example_singleFlow() {
 	outputPorts := []uint16{po1}
 
 	data := 11
-	n := NewSingleFlow("seconds", *t, inputPorts, outputPorts, nil, singleFlowProcessCallback, &data)
+	n := NewSingleFlowNode("seconds", *t, inputPorts, outputPorts, nil, singleFlowProcessCallback, &data)
 
-	n.SendPacket("Bool", true, inputPorts[0])
-	n.SendPacket("Bool", false, inputPorts[1])
+	n.GetNode().SendPacket("Bool", true, inputPorts[0])
+	n.GetNode().SendPacket("Bool", false, inputPorts[1])
 
 	Run()
 

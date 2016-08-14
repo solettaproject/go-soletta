@@ -82,14 +82,15 @@ func (fnt *FlowNodeType) GetPort(name string, direction int) (portIndex uint16, 
 	return
 }
 
-//Retrieves the number of input ports
-func (fnt *FlowNodeType) GetInputPortCount() int {
-	return int(fnt.nodeType.ports_in_count)
-}
-
-//Retrieves the number of output ports
-func (fnt *FlowNodeType) GetOutputPortCount() int {
-	return int(fnt.nodeType.ports_out_count)
+//Retrieves the number of ports
+func (fnt *FlowNodeType) GetPortCount(direction int) int {
+	switch direction {
+	case FlowPortInput:
+		return int(fnt.nodeType.ports_in_count)
+	case FlowPortOutput:
+		return int(fnt.nodeType.ports_out_count)
+	}
+	return 0
 }
 
 //Frees the resources associated with the flow node type.
