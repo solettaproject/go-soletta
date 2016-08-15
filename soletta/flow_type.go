@@ -16,7 +16,6 @@ type FlowNodeType struct {
 }
 
 //Creates a new node type by name
-//Creates a new node type by name
 func NewFlowNodeType(typeName string) *FlowNodeType {
 	ret := &FlowNodeType{}
 

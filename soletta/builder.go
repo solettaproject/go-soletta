@@ -54,10 +54,13 @@ func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[s
 	defer C.free(unsafe.Pointer(cname))
 
 	ok = true
-	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.nodeType, nil)
+
+	copts := mapOptionsToFlowOptions(options)
+	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.nodeType, copts)
 	if r < 0 {
 		ok = false
 	}
+
 	return
 }
 

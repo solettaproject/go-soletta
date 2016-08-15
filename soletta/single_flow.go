@@ -29,14 +29,22 @@ func NewSingleFlowNode(nodeName string, nodeType FlowNodeType, inputPorts, outpu
 	var coptions *C.struct_sol_flow_node_options
 
 	strvOptions := newstrvOptions(options)
+	success := true
 	if strvOptions != nil {
 		defer strvOptions.destroy()
-
 		namedOptions := C.struct_sol_flow_node_named_options{}
-		C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.nodeType, strvOptions.cstrvOptions)
-		defer C.sol_flow_node_named_options_fini(&namedOptions)
-		C.sol_flow_node_options_new(nodeType.nodeType, &namedOptions, &coptions)
-		defer C.sol_flow_node_options_del(nodeType.nodeType, coptions)
+		r := C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.nodeType, strvOptions.cstrvOptions)
+		if r == 0 {
+			defer C.sol_flow_node_named_options_fini(&namedOptions)
+			C.sol_flow_node_options_new(nodeType.nodeType, &namedOptions, &coptions)
+			defer C.sol_flow_node_options_del(nodeType.nodeType, coptions)
+		} else {
+			success = false
+		}
+	}
+	if !success {
+		/* Assume this is a Go custom type */
+		coptions = mapOptionsToFlowOptions(options)
 	}
 
 	/* Create C array parameters for input and output ports */

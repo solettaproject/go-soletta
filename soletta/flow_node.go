@@ -14,6 +14,11 @@ type FlowNode struct {
 	cnode *C.struct_sol_flow_node
 }
 
+//Retrieves the name (id) of this flow node
+func (fn *FlowNode) GetName() string {
+	return C.GoString(C.sol_flow_node_get_id(fn.cnode))
+}
+
 //Retrieves the type associated with the flow node
 //Returns a nil value in case of error
 func (fn *FlowNode) GetType() *FlowNodeType {

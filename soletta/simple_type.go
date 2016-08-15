@@ -36,6 +36,8 @@ type SimpleFlowEvent struct {
 	PortName     string
 	ConnectionId uint16
 	Packet       *FlowPacket
+	Options      map[string]string
+	Data         interface{}
 }
 
 func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFlowEvent {
@@ -61,6 +63,8 @@ func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFl
 	ret.Port = uint16(cevent.port)
 	ret.ConnectionId = uint16(cevent.conn_id)
 	ret.Packet = &FlowPacket{cevent.packet}
+	ret.Options = flowOptionsToMapOptions(cevent.options)
+	ret.Data = nil
 
 	return ret
 }
@@ -89,7 +93,7 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 		}
 	}
 
-	ctype := C.sol_flow_simple_c_type_new_full(cname, 0, C.uint16_t(unsafe.Sizeof(C.struct_sol_flow_node_options{})), (*[0]byte)(C.goProcessEvent), (*C.struct_CPortDescription)(cports), C.int(len(ports)))
+	ctype := C.sol_flow_simple_c_type_new_full(cname, 0, C.uint16_t(getSimpleTypeOptionsSize()), (*[0]byte)(C.goProcessEvent), (*C.struct_CPortDescription)(cports), C.int(len(ports)))
 	if ctype == nil {
 		return nil
 	}
