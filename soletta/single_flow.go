@@ -16,7 +16,7 @@ import "C"
 import "unsafe"
 
 type SingleFlowNode struct {
-	node *FlowNode
+	*FlowNode
 }
 
 //Creates a flow from a single node
@@ -75,18 +75,13 @@ func NewSingleFlowNode(nodeName string, nodeType FlowNodeType, inputPorts, outpu
 	return &SingleFlowNode{&FlowNode{cnode}}
 }
 
-//Retrieves the wrapped flow node
-func (sf *SingleFlowNode) GetNode() *FlowNode {
-	return sf.node
-}
-
 //Connects (enables) the specified port
 func (sf *SingleFlowNode) ConnectPort(portIndex uint16, direction int) {
 	switch direction {
 	case FlowPortInput:
-		C.sol_flow_single_connect_port_in(sf.node.cnode, C.uint16_t(portIndex))
+		C.sol_flow_single_connect_port_in(sf.FlowNode.cnode, C.uint16_t(portIndex))
 	case FlowPortOutput:
-		C.sol_flow_single_connect_port_out(sf.node.cnode, C.uint16_t(portIndex))
+		C.sol_flow_single_connect_port_out(sf.FlowNode.cnode, C.uint16_t(portIndex))
 	}
 }
 
@@ -94,15 +89,15 @@ func (sf *SingleFlowNode) ConnectPort(portIndex uint16, direction int) {
 func (sf *SingleFlowNode) DisconnectPort(portIndex uint16, direction int) {
 	switch direction {
 	case FlowPortInput:
-		C.sol_flow_single_disconnect_port_in(sf.node.cnode, C.uint16_t(portIndex))
+		C.sol_flow_single_disconnect_port_in(sf.FlowNode.cnode, C.uint16_t(portIndex))
 	case FlowPortOutput:
-		C.sol_flow_single_disconnect_port_out(sf.node.cnode, C.uint16_t(portIndex))
+		C.sol_flow_single_disconnect_port_out(sf.FlowNode.cnode, C.uint16_t(portIndex))
 	}
 }
 
 //Frees the resources associated with the single flow node
 func (sf *SingleFlowNode) Destroy() {
-	sf.node.Destroy()
+	sf.FlowNode.Destroy()
 }
 
 //Callback triggered whenever there is data on node's ports
