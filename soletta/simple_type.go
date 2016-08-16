@@ -70,7 +70,7 @@ func newSimpleFlowEvent(cevent *C.struct_sol_flow_simple_c_type_event) *SimpleFl
 }
 
 //Creates a custom node type
-func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEventCallback, data interface{}) *FlowNodeType {
+func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEventCallback) *FlowNodeType {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -98,19 +98,18 @@ func NewSimpleNodeType(name string, ports []PortDescription, cb ProcessSimpleEve
 		return nil
 	}
 
-	mapTypeNameToProcessCallback[name] = simplePacked{cb, data}
+	mapTypeNameToProcessCallback[name] = simplePacked{cb}
 	return &FlowNodeType{ctype}
 }
 
 //Encapsulates the callback with the associated data
 type simplePacked struct {
-	cb   ProcessSimpleEventCallback
-	data interface{}
+	cb ProcessSimpleEventCallback
 }
 
 //Callback for processing events associated with the node
 //Return true if no error, false otherwise
-type ProcessSimpleEventCallback func(node *FlowNode, event *SimpleFlowEvent, data interface{}) bool
+type ProcessSimpleEventCallback func(node *FlowNode, event *SimpleFlowEvent) bool
 
 //export goProcessEvent
 func goProcessEvent(cnode *C.struct_sol_flow_node, ev *C.struct_sol_flow_simple_c_type_event, data unsafe.Pointer) C.int {
@@ -118,7 +117,7 @@ func goProcessEvent(cnode *C.struct_sol_flow_node, ev *C.struct_sol_flow_simple_
 	name := C.GoString(t.description.name)
 	packed := mapTypeNameToProcessCallback[name]
 	ret := C.int(0)
-	r := packed.cb(&FlowNode{cnode}, newSimpleFlowEvent(ev), packed.data)
+	r := packed.cb(&FlowNode{cnode}, newSimpleFlowEvent(ev))
 
 	//Convert the callback return value to boolean
 	if !r {

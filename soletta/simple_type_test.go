@@ -2,11 +2,13 @@ package soletta
 
 import "strconv"
 
-func simpleTypeProcessEvent(node *FlowNode, event *SimpleFlowEvent, data interface{}) bool {
+func simpleTypeProcessEvent(node *FlowNode, event *SimpleFlowEvent) bool {
 	switch event.Type {
+	case SimpleEventOpen:
+		node.SetData(map[string]int32{"hour": -1, "minute": -1, "second": -1})
 	case SimpleEventProcessInputPort:
 		/* Output current time (gathered from input ports) as a string to output port */
-		m := data.(map[string]int32)
+		m := node.GetData().(map[string]int32)
 		m[event.PortName], _ = event.Packet.GetInteger()
 
 		if event.PortName == "second" && m["second"] != 0 && m["hour"] != -1 && m["minute"] != -1 {
@@ -25,14 +27,13 @@ Shows the creation and usage of a custom type with
 func Example_simpleType() {
 	Init()
 
-	data := map[string]int32{"hour": -1, "minute": -1, "second": -1}
 	ports := []PortDescription{
 		PortDescription{"hour", "Integer", FlowPortInput},
 		PortDescription{"minute", "Integer", FlowPortInput},
 		PortDescription{"second", "Integer", FlowPortInput},
 		PortDescription{"time", "String", FlowPortOutput},
 	}
-	st := NewSimpleNodeType("custom", ports, simpleTypeProcessEvent, data)
+	st := NewSimpleNodeType("custom", ports, simpleTypeProcessEvent)
 
 	/* Create a flow network around the custom type
 	   Redirect hour, minute and second data from wallclock type into

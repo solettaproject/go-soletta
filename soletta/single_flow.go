@@ -95,13 +95,8 @@ func (sf *SingleFlowNode) DisconnectPort(portIndex uint16, direction int) {
 	}
 }
 
-//Frees the resources associated with the single flow node
-func (sf *SingleFlowNode) Destroy() {
-	sf.FlowNode.Destroy()
-}
-
 //Callback triggered whenever there is data on node's ports
-type SingleFlowProcessCallback func(node FlowNode, port uint16, packet FlowPacket, data interface{})
+type SingleFlowProcessCallback func(node *FlowNode, port uint16, packet *FlowPacket, data interface{})
 
 type singleFlowPacked struct {
 	cb   SingleFlowProcessCallback
@@ -112,9 +107,9 @@ type singleFlowPacked struct {
 func goSingleFlowProcessCallback(data unsafe.Pointer, cnode *C.struct_sol_flow_node, cport C.uint16_t, cpacket *C.struct_sol_flow_packet) {
 	p := getPointerMapping(uintptr(data)).(*singleFlowPacked)
 
-	flowNode := FlowNode{cnode}
+	flowNode := &FlowNode{cnode}
 	port := uint16(cport)
-	flowPacket := FlowPacket{cpacket}
+	flowPacket := &FlowPacket{cpacket}
 
 	p.cb(flowNode, port, flowPacket, p.data)
 }

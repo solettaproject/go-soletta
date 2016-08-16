@@ -1,6 +1,6 @@
 package soletta
 
-func singleFlowProcessCallback(node FlowNode, port uint16, packet FlowPacket, data interface{}) {
+func singleFlowProcessCallback(node *FlowNode, port uint16, packet *FlowPacket, data interface{}) {
 	v, _ := packet.GetBool()
 	println("true xor false =", v, "\nPassed data =", *data.(*int))
 }

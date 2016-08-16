@@ -38,6 +38,19 @@ func (fn *FlowNode) GetPort(name string, direction int) (portIndex uint16, ok bo
 	return t.GetPort(name, direction)
 }
 
+//Sets the data associated with the flow node
+func (fn *FlowNode) SetData(data interface{}) {
+	if data == nil {
+		return
+	}
+	nodeData[fn.cnode] = data
+}
+
+//Retrieves the data associated with this flow node
+func (fn *FlowNode) GetData() interface{} {
+	return nodeData[fn.cnode]
+}
+
 //Sends a packet on this port
 func (fn *FlowNode) SendPacket(packetType string, value interface{}, port uint16) {
 	cport := C.uint16_t(port)
@@ -78,5 +91,8 @@ func (fn *FlowNode) SendPacket(packetType string, value interface{}, port uint16
 
 //Frees the resources associated with the flow node
 func (fn *FlowNode) Destroy() {
+	delete(nodeData, fn.cnode)
 	C.sol_flow_node_del(fn.cnode)
 }
+
+var nodeData map[*C.struct_sol_flow_node]interface{} = make(map[*C.struct_sol_flow_node]interface{})
