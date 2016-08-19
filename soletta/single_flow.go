@@ -33,11 +33,11 @@ func NewSingleFlowNode(nodeName string, nodeType FlowNodeType, inputPorts, outpu
 	if strvOptions != nil {
 		defer strvOptions.destroy()
 		namedOptions := C.struct_sol_flow_node_named_options{}
-		r := C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.nodeType, strvOptions.cstrvOptions)
+		r := C.sol_flow_node_named_options_init_from_strv(&namedOptions, nodeType.ctype, strvOptions.cstrvOptions)
 		if r == 0 {
 			defer C.sol_flow_node_named_options_fini(&namedOptions)
-			C.sol_flow_node_options_new(nodeType.nodeType, &namedOptions, &coptions)
-			defer C.sol_flow_node_options_del(nodeType.nodeType, coptions)
+			C.sol_flow_node_options_new(nodeType.ctype, &namedOptions, &coptions)
+			defer C.sol_flow_node_options_del(nodeType.ctype, coptions)
 		} else {
 			success = false
 		}
@@ -66,7 +66,7 @@ func NewSingleFlowNode(nodeName string, nodeType FlowNodeType, inputPorts, outpu
 	*(*C.uint16_t)(unsafe.Pointer(pindexOut)) = C.UINT16_MAX
 
 	p := mapPointer(&singleFlowPacked{cb, data})
-	cnode := C.sol_flow_single_new(cname, nodeType.nodeType, coptions, (*C.uint16_t)(cinputPorts), (*C.uint16_t)(coutputPorts), (*[0]byte)(C.goSingleFlowProcessCallback), unsafe.Pointer(p))
+	cnode := C.sol_flow_single_new(cname, nodeType.ctype, coptions, (*C.uint16_t)(cinputPorts), (*C.uint16_t)(coutputPorts), (*[0]byte)(C.goSingleFlowProcessCallback), unsafe.Pointer(p))
 
 	if cnode == nil {
 		return nil

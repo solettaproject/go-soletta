@@ -56,7 +56,7 @@ func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[s
 	ok = true
 
 	copts := mapOptionsToFlowOptions(options)
-	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.nodeType, copts)
+	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.ctype, copts)
 	if r < 0 {
 		ok = false
 	}
@@ -80,7 +80,7 @@ func (fb *FlowBuilder) Connect(name1, port1, name2, port2 string) {
 //can be created the root flow node, using CreateNode.
 func (fb *FlowBuilder) GetNodeType() FlowNodeType {
 	ret := FlowNodeType{}
-	ret.nodeType = C.sol_flow_builder_get_node_type(fb.builder)
+	ret.ctype = C.sol_flow_builder_get_node_type(fb.builder)
 	return ret
 }
 
