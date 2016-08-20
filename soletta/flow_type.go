@@ -7,6 +7,7 @@ package soletta
 */
 import "C"
 import "unsafe"
+import "errors"
 
 //A node type carries information about node operations,
 //input/output ports, options, descriptions etc.
@@ -72,7 +73,7 @@ func (fnt *FlowNodeType) CreateNode(parent *FlowNode, id string, options map[str
 }
 
 //Gets an input port by name
-func (fnt *FlowNodeType) GetPort(name string, direction int) (portIndex uint16, ok bool) {
+func (fnt *FlowNodeType) GetPort(name string, direction int) (portIndex uint16, err error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -83,9 +84,9 @@ func (fnt *FlowNodeType) GetPort(name string, direction int) (portIndex uint16, 
 		portIndex = uint16(C.sol_flow_node_find_port_out(fnt.ctype, cname))
 	}
 
-	ok = true
+	err = nil
 	if portIndex == C.UINT16_MAX {
-		ok = false
+		err = errors.New("Port doesn't exist")
 	}
 
 	return

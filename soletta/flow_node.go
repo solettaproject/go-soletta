@@ -8,6 +8,7 @@ import "C"
 import "unsafe"
 import "image/color"
 import "time"
+import "errors"
 
 //Represents a node in the flow based programming paradigm
 type FlowNode struct {
@@ -30,10 +31,10 @@ func (fn *FlowNode) GetType() *FlowNodeType {
 }
 
 //Retrieves the port index by its name
-func (fn *FlowNode) GetPort(name string, direction int) (portIndex uint16, ok bool) {
+func (fn *FlowNode) GetPort(name string, direction int) (portIndex uint16, err error) {
 	t := fn.GetType()
 	if t == nil {
-		return C.UINT16_MAX, false
+		return C.UINT16_MAX, errors.New("No type associated to node")
 	}
 	return t.GetPort(name, direction)
 }

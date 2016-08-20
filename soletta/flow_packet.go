@@ -8,6 +8,7 @@ import "C"
 import "time"
 import "image/color"
 import "unsafe"
+import "errors"
 
 //Data structure describing a geographical location
 type Location struct {
@@ -67,88 +68,104 @@ func NewFlowPacket(name string, args ...interface{}) *FlowPacket {
 }
 
 //Returns the integer value stored in the packet
-func (fp *FlowPacket) GetInteger() (ret int32, ok bool) {
+func (fp *FlowPacket) GetInteger() (ret int32, err error) {
 	var value C.int32_t
 	r := C.sol_flow_packet_get_irange_value(fp.cpacket, &value)
-	ret = int32(value)
-	ok = r >= 0
-	return ret, ok
+	ret, err = int32(value), nil
+	if r < 0 {
+		err = errors.New("Error retrieving Integer value")
+	}
+	return
 }
 
 //Returns the double value store in the packet
-func (fp *FlowPacket) GetDouble() (ret float64, ok bool) {
+func (fp *FlowPacket) GetDouble() (ret float64, err error) {
 	var value C.double
 	r := C.sol_flow_packet_get_drange_value(fp.cpacket, &value)
-	ret = float64(value)
-	ok = r >= 0
-	return ret, ok
+	ret, err = float64(value), nil
+	if r < 0 {
+		err = errors.New("Error retrieving Double value")
+	}
+	return
 }
 
 //Returns the boolean value stored in the packet
-func (fp *FlowPacket) GetBool() (ret, ok bool) {
+func (fp *FlowPacket) GetBool() (ret bool, err error) {
 	var value C.bool
 	r := C.sol_flow_packet_get_bool(fp.cpacket, &value)
-	ret = bool(value)
-	ok = r >= 0
-	return ret, ok
+	ret, err = bool(value), nil
+	if r < 0 {
+		err = errors.New("Error retrieving Bool value")
+	}
+	return
 }
 
 //Returns the byte value stored in the packet
-func (fp *FlowPacket) GetByte() (ret byte, ok bool) {
+func (fp *FlowPacket) GetByte() (ret byte, err error) {
 	var value C.uchar
 	r := C.sol_flow_packet_get_byte(fp.cpacket, &value)
-	ret = byte(value)
-	ok = r >= 0
-	return ret, ok
+	ret, err = byte(value), nil
+	if r < 0 {
+		err = errors.New("Error retrieving Byte value")
+	}
+	return
 }
 
 //Returns the string value stored in the packet
-func (fp *FlowPacket) GetString() (ret string, ok bool) {
+func (fp *FlowPacket) GetString() (ret string, err error) {
 	var value *C.char
 	r := C.sol_flow_packet_get_string(fp.cpacket, &value)
 	if r < 0 {
-		return "", false
+		return "", errors.New("Error retrieving String value")
 	}
-	return C.GoString(value), true
+	return C.GoString(value), nil
 }
 
 //Returns the location value stored in the packet
-func (fp *FlowPacket) GetLocation() (ret Location, ok bool) {
+func (fp *FlowPacket) GetLocation() (ret Location, err error) {
 	var alt, lon, lat C.double
 	r := C.sol_flow_packet_get_location_components(fp.cpacket, &lat, &lon, &alt)
-	ret = Location{float64(alt), float64(lon), float64(alt)}
-	ok = r >= 0
-	return ret, ok
+	ret, err = Location{float64(alt), float64(lon), float64(alt)}, nil
+	if r < 0 {
+		err = errors.New("Error retrieving Location value")
+	}
+	return
 }
 
 //Returns the time value stored in the packet
-func (fp *FlowPacket) GetTime() (ret time.Time, ok bool) {
+func (fp *FlowPacket) GetTime() (ret time.Time, err error) {
 	var value C.struct_timespec
 	r := C.sol_flow_packet_get_timestamp(fp.cpacket, &value)
-	ret = time.Unix(int64(value.tv_sec), int64(value.tv_nsec))
-	ok = r >= 0
-	return ret, ok
+	ret, err = time.Unix(int64(value.tv_sec), int64(value.tv_nsec)), nil
+	if r < 0 {
+		err = errors.New("Error retrieving Location value")
+	}
+	return
 }
 
 //Returns the RGBA color stored in the packet
-func (fp *FlowPacket) GetColor() (ret color.Color, ok bool) {
+func (fp *FlowPacket) GetColor() (ret color.Color, err error) {
 	var value C.struct_sol_rgb
 	cr := C.sol_flow_packet_get_rgb(fp.cpacket, &value)
 	r := uint32(float64(value.red) / float64(value.red_max) * 65536)
 	g := uint32(float64(value.green) / float64(value.green_max) * 65536)
 	b := uint32(float64(value.blue) / float64(value.blue_max) * 65536)
-	ret = Color{r, g, b, 65536}
-	ok = cr >= 0
-	return ret, ok
+	ret, err = Color{r, g, b, 65536}, nil
+	if cr < 0 {
+		err = errors.New("Error retrieving Color value")
+	}
+	return
 }
 
 //Returns the direction vector stored in the packet
-func (fp *FlowPacket) GetDirection() (ret DirectionVector, ok bool) {
+func (fp *FlowPacket) GetDirection() (ret DirectionVector, err error) {
 	var value C.struct_sol_direction_vector
 	r := C.sol_flow_packet_get_direction_vector(fp.cpacket, &value)
-	ret = DirectionVector{float64(value.x), float64(value.y), float64(value.z), float64(value.max), float64(value.min)}
-	ok = r >= 0
-	return ret, ok
+	ret, err = DirectionVector{float64(value.x), float64(value.y), float64(value.z), float64(value.max), float64(value.min)}, nil
+	if r < 0 {
+		err = errors.New("Error retrieving Location value")
+	}
+	return
 }
 
 //Frees the resources associated with the flow packet

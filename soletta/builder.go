@@ -7,6 +7,7 @@ package soletta
 import "C"
 import "runtime"
 import "unsafe"
+import "errors"
 
 //Represents a handle for a flow builder
 type FlowBuilder struct {
@@ -25,7 +26,7 @@ func NewFlowBuilder() *FlowBuilder {
 //Adds a new flow node named nodeName of type named nodeType.
 //A set of options of form (key, value) can be provided.
 //Returns true if successful, false otherwise
-func (fb *FlowBuilder) AddNodeByTypeName(nodeName, nodeType string, options map[string]string) (ok bool) {
+func (fb *FlowBuilder) AddNodeByTypeName(nodeName, nodeType string, options map[string]string) error {
 	cname, cnodeType := C.CString(nodeName), C.CString(nodeType)
 	defer C.free(unsafe.Pointer(cname))
 	defer C.free(unsafe.Pointer(cnodeType))
@@ -38,30 +39,27 @@ func (fb *FlowBuilder) AddNodeByTypeName(nodeName, nodeType string, options map[
 		coptions = strvOptions.cstrvOptions
 	}
 
-	ok = true
 	r := C.sol_flow_builder_add_node_by_type(fb.builder, cname, cnodeType, coptions)
 	if r < 0 {
-		ok = false
+		return errors.New("Error adding node")
 	}
-	return
+	return nil
 }
 
 //Adds a new flow node named nodeName of type fnt
 //A set of options of form (key, value) can be provided.
 //Returns true if successful, false otherwise
-func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[string]string) (ok bool) {
+func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[string]string) error {
 	cname := C.CString(nodeName)
 	defer C.free(unsafe.Pointer(cname))
-
-	ok = true
 
 	copts := mapOptionsToFlowOptions(options)
 	r := C.sol_flow_builder_add_node(fb.builder, cname, fnt.ctype, copts)
 	if r < 0 {
-		ok = false
+		return errors.New("Error adding node")
 	}
 
-	return
+	return nil
 }
 
 //Add a connection via port names to the connections specification
