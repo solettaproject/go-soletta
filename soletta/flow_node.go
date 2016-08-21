@@ -40,8 +40,11 @@ func (fn *FlowNode) GetPort(name string, direction int) (portIndex uint16, err e
 }
 
 //Sets the data associated with the flow node
+//Passing a nil value will cause the data associated
+//with the node (if any) to be removed.
 func (fn *FlowNode) SetData(data interface{}) {
 	if data == nil {
+		delete(nodeData, fn.cnode)
 		return
 	}
 	nodeData[fn.cnode] = data
@@ -92,7 +95,7 @@ func (fn *FlowNode) SendPacket(packetType string, value interface{}, port uint16
 
 //Frees the resources associated with the flow node
 func (fn *FlowNode) Destroy() {
-	delete(nodeData, fn.cnode)
+	fn.SetData(nil)
 	C.sol_flow_node_del(fn.cnode)
 }
 
