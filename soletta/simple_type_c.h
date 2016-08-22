@@ -20,6 +20,7 @@
 
 #include "sol-flow.h"
 #include "sol-macros.h"
+#include "sol-flow-packet.h"
 
 /**
  * @file
@@ -91,7 +92,7 @@ typedef struct sol_flow_simple_c_type_event {
 struct CPortDescription
 {
     char *name;
-    sol_flow_packet_type *packet_type;
+    struct sol_flow_packet_type *packet_type;
     int direction;
 };
 
