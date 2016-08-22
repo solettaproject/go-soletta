@@ -1,16 +1,17 @@
-package soletta
+package soletta_test
 
+import "github.com/solettaproject/go-soletta/soletta"
 import "testing"
 
 type idleContext struct {
 	data   int
-	handle IdleHandle
+	handle soletta.IdleHandle
 }
 
 func idleCb1(data interface{}) bool {
 	tc := data.(*idleContext)
 	if tc.data == 10 {
-		RemoveIdle(tc.handle)
+		soletta.RemoveIdle(tc.handle)
 		return false
 	}
 	tc.data++
@@ -20,30 +21,30 @@ func idleCb1(data interface{}) bool {
 func idleCb2(data interface{}) bool {
 	tc := data.(*idleContext)
 	if tc.data == 20 {
-		RemoveIdle(tc.handle)
-		Quit()
+		soletta.RemoveIdle(tc.handle)
+		soletta.Quit()
 		return false
 	}
 	tc.data++
 	return true
 }
 
-func TestIdle(t *testing.T) {
+func TestIdle(test *testing.T) {
 	var ic1, ic2 idleContext
 
-	Init()
+	soletta.Init()
 
-	ic1.handle = AddIdle(idleCb1, &ic1)
-	ic2.handle = AddIdle(idleCb2, &ic2)
+	ic1.handle = soletta.AddIdle(idleCb1, &ic1)
+	ic2.handle = soletta.AddIdle(idleCb2, &ic2)
 
-	Run()
-	Shutdown()
+	soletta.Run()
+	soletta.Shutdown()
 
 	if ic1.data != 10 {
-		t.Fail()
+		test.Fail()
 	}
 
 	if ic2.data != 20 {
-		t.Fail()
+		test.Fail()
 	}
 }

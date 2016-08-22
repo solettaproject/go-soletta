@@ -1,16 +1,17 @@
-package soletta
+package soletta_test
 
+import "github.com/solettaproject/go-soletta/soletta"
 import "testing"
 
 type timeoutContext struct {
 	data   int
-	handle TimeoutHandle
+	handle soletta.TimeoutHandle
 }
 
 func timeoutCb1(data interface{}) bool {
 	tc := data.(*timeoutContext)
 	if tc.data == 10 {
-		RemoveTimeout(tc.handle)
+		soletta.RemoveTimeout(tc.handle)
 		return false
 	}
 	tc.data++
@@ -20,30 +21,30 @@ func timeoutCb1(data interface{}) bool {
 func timeoutCb2(data interface{}) bool {
 	tc := data.(*timeoutContext)
 	if tc.data == 20 {
-		RemoveTimeout(tc.handle)
-		Quit()
+		soletta.RemoveTimeout(tc.handle)
+		soletta.Quit()
 		return false
 	}
 	tc.data++
 	return true
 }
 
-func TestTimeout(t *testing.T) {
+func TestTimeout(test *testing.T) {
 	var tc1, tc2 timeoutContext
 
-	Init()
+	soletta.Init()
 
-	tc1.handle = AddTimeout(timeoutCb1, &tc1, 1)
-	tc2.handle = AddTimeout(timeoutCb2, &tc2, 1)
+	tc1.handle = soletta.AddTimeout(timeoutCb1, &tc1, 1)
+	tc2.handle = soletta.AddTimeout(timeoutCb2, &tc2, 1)
 
-	Run()
-	Shutdown()
+	soletta.Run()
+	soletta.Shutdown()
 
 	if tc1.data != 10 {
-		t.Fail()
+		test.Fail()
 	}
 
 	if tc2.data != 20 {
-		t.Fail()
+		test.Fail()
 	}
 }

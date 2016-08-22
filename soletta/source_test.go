@@ -1,14 +1,15 @@
-package soletta
+package soletta_test
 
+import "github.com/solettaproject/go-soletta/soletta"
 import "testing"
 
 type Source struct {
 	data   int
-	handle MainloopSourceHandle
+	handle soletta.MainloopSourceHandle
 }
 
 func (t *Source) GetMainloopSourceAPIVersion() uint16 {
-	return MainloopSourceAPIVersion
+	return soletta.MainloopSourceAPIVersion
 }
 
 func (t *Source) Check(data interface{}) bool {
@@ -24,24 +25,24 @@ func (t *Source) Dispose(data interface{}) {
 
 func (t *Source) Prepare(data interface{}) bool {
 	if t.data == 10 {
-		RemoveSource(t.handle)
-		Quit()
+		soletta.RemoveSource(t.handle)
+		soletta.Quit()
 		return false
 	}
 	return true
 }
 
-func TestSource(t *testing.T) {
+func TestSource(test *testing.T) {
 	var s Source
 
-	Init()
+	soletta.Init()
 
-	s.handle = AddSource(&s, nil)
+	s.handle = soletta.AddSource(&s, nil)
 
-	Run()
-	Shutdown()
+	soletta.Run()
+	soletta.Shutdown()
 
 	if s.data != 10 {
-		t.Fail()
+		test.Fail()
 	}
 }

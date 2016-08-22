@@ -23,6 +23,32 @@ func NewFlowBuilder() *FlowBuilder {
 	return builder
 }
 
+//Exports a port
+//portIndex is used for cases where portName is actually an array of ports, pass -1 otherwise
+func (fb *FlowBuilder) ExportPort(nodeName, portName string, portIndex int, exportedName string, direction int) (err error) {
+	cnodename, cportname, cexportedname := C.CString(nodeName), C.CString(portName), C.CString(exportedName)
+	defer C.free(unsafe.Pointer(cportname))
+	defer C.free(unsafe.Pointer(cnodename))
+	defer C.free(unsafe.Pointer(cexportedname))
+
+	err = nil
+
+	switch direction {
+	case FlowPortInput:
+		r := C.sol_flow_builder_export_port_in(fb.builder, cnodename, cportname, C.int(portIndex), cexportedname)
+		if r < 0 {
+			err = errors.New("Could not export input port")
+		}
+	case FlowPortOutput:
+		r := C.sol_flow_builder_export_port_out(fb.builder, cnodename, cportname, C.int(portIndex), cexportedname)
+		if r < 0 {
+			err = errors.New("Could not export output port")
+		}
+	}
+
+	return
+}
+
 //Adds a new flow node named nodeName of type named nodeType.
 //A set of options of form (key, value) can be provided.
 //Returns true if successful, false otherwise
@@ -48,7 +74,6 @@ func (fb *FlowBuilder) AddNodeByTypeName(nodeName, nodeType string, options map[
 
 //Adds a new flow node named nodeName of type fnt
 //A set of options of form (key, value) can be provided.
-//Returns true if successful, false otherwise
 func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[string]string) error {
 	cname := C.CString(nodeName)
 	defer C.free(unsafe.Pointer(cname))
@@ -64,14 +89,22 @@ func (fb *FlowBuilder) AddNode(nodeName string, fnt *FlowNodeType, options map[s
 
 //Add a connection via port names to the connections specification
 //of the resulting constructed flow. The connected nodes has to be
-//first added using AddNode.
-func (fb *FlowBuilder) Connect(name1, port1, name2, port2 string) {
-	cname1, cport1, cname2, cport2 := C.CString(name1), C.CString(port1), C.CString(name2), C.CString(port2)
+//first added using AddNode. portIndex is used in cases where
+//input ports are grouped under the same name, pass -1 otherwise.
+func (fb *FlowBuilder) Connect(nodeName1, portName1 string, portIndex1 int, nodeName2, portName2 string, portIndex2 int) (err error) {
+	cname1, cport1, cname2, cport2 := C.CString(nodeName1), C.CString(portName1), C.CString(nodeName2), C.CString(portName2)
 	defer C.free(unsafe.Pointer(cname1))
 	defer C.free(unsafe.Pointer(cport1))
 	defer C.free(unsafe.Pointer(cname2))
 	defer C.free(unsafe.Pointer(cport2))
-	C.sol_flow_builder_connect(fb.builder, cname1, cport1, -1, cname2, cport2, -1)
+
+	err = nil
+
+	r := C.sol_flow_builder_connect(fb.builder, cname1, cport1, C.int(portIndex1), cname2, cport2, C.int(portIndex2))
+	if r < 0 {
+		err = errors.New("Failed to make connection")
+	}
+	return
 }
 
 //Retrieves the node type of the builder. From the builder's node type
