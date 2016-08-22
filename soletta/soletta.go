@@ -7,6 +7,7 @@ package soletta
 #include "soletta.h"
 */
 import "C"
+import "errors"
 
 //Soletta API version
 const MainloopSourceAPIVersion uint16 = C.SOL_MAINLOOP_SOURCE_TYPE_API_VERSION
@@ -15,23 +16,21 @@ const MainloopSourceAPIVersion uint16 = C.SOL_MAINLOOP_SOURCE_TYPE_API_VERSION
 //
 //This function setup all needed infrastructure.
 //It should be called prior the use of any Soletta API.
-func Init() bool {
-	r := C.sol_init()
-	if r == 0 {
-		return true
+func Init() error {
+	if C.sol_init() < 0 {
+		return errors.New("Failed to initialize Soletta")
 	}
-	return false
+	return nil
 }
 
 //Runs the main loop.
 //
 //This function executes the main loop and it will return only after Quit() is called
-func Run() bool {
-	r := C.sol_run()
-	if r == C.EXIT_SUCCESS {
-		return true
+func Run() error {
+	if C.sol_run() != C.EXIT_SUCCESS {
+		return errors.New("Soletta mainloop exited with non success value")
 	}
-	return false
+	return nil
 }
 
 //Terminates the main loop.
